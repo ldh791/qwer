@@ -18,9 +18,21 @@ body {
   border: 1px solid #ccc;
   padding: 10px;
 }
-.post {
-  border-top: 1px solid #ddd;
-  padding: 5px;
+async function post(){
+  const content = document.getElementById('content').value;
+  const image = document.getElementById('image').files[0];
+
+  const formData = new FormData();
+  formData.append('content', content);
+  if(image) formData.append('image', image);
+
+  await fetch('/api/posts', {
+    method: 'POST',
+    body: formData
+    // ❌ headers 절대 넣지마
+  });
+
+  load();
 }
 </style>
 </head>
