@@ -8,97 +8,31 @@
 <style>
 body {
   background: #eef2ff;
-  font-family: Verdana, Arial, sans-serif;
+  font-family: Verdana;
   font-size: 12px;
-  margin: 0;
 }
-
-.header {
-  text-align: center;
-  padding: 12px;
-  font-size: 18px;
-  font-weight: bold;
-  color: #334;
-}
-
 .container {
   max-width: 800px;
   margin: auto;
   background: #fff;
-  border: 1px solid #ccd;
+  border: 1px solid #ccc;
   padding: 10px;
 }
-
-@media (max-width: 600px) {
-  .container {
-    width: 100%;
-    border: none;
-    padding: 8px;
-  }
-}
-
-.form {
-  background: #f0f4ff;
-  border: 1px solid #ccd;
-  padding: 8px;
-  margin-bottom: 10px;
-}
-
-textarea {
-  width: 100%;
-  height: 60px;
-  font-size: 12px;
-  border: 1px solid #ccd;
-  resize: none;
-}
-
-input[type="file"] {
-  margin-top: 5px;
-}
-
-button {
-  margin-top: 5px;
-  font-size: 12px;
-  padding: 4px 8px;
-}
-
 .post {
-  border-top: 1px solid #dde;
-  padding: 6px 0;
-}
-
-.post-header {
-  font-size: 11px;
-  color: #556;
-}
-
-.post-id {
-  color: #889;
-}
-
-.post-content {
-  white-space: pre-wrap;
-  line-height: 1.4;
-  word-break: break-word;
-}
-
-.post img {
-  max-width: 200px;
-  margin-top: 5px;
-  display: block;
+  border-top: 1px solid #ddd;
+  padding: 5px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">Anonymous Board</div>
-
 <div class="container">
 
-<div class="form">
-  <textarea id="content" placeholder="내용 입력"></textarea><br>
-  <input type="file" id="image"><br>
+<div>
+  <!-- 🔥 name 추가 -->
+  <textarea id="content" name="content"></textarea><br>
+  <input type="file" id="image" name="image"><br>
   <button onclick="post()">작성</button>
 </div>
 
@@ -119,11 +53,9 @@ async function load(){
     div.className = 'post';
 
     div.innerHTML = `
-      <div class="post-header">
-        Anonymous <span class="post-id">No.${p.id}</span>
-      </div>
-      <div class="post-content">${escapeHtml(p.content)}</div>
-      ${p.image ? `<img src="${p.image}">` : ''}
+      <div>No.${p.id}</div>
+      <div>${p.content}</div>
+      ${p.image ? `<img src="${p.image}" style="max-width:200px;">` : ''}
     `;
 
     list.appendChild(div);
@@ -135,25 +67,20 @@ async function post(){
   const image = document.getElementById('image').files[0];
 
   const formData = new FormData();
+
+  // 🔥 반드시 이 이름 유지
   formData.append('content', content);
   if(image) formData.append('image', image);
 
-  await fetch('/api/posts',{
-    method:'POST',
+  await fetch('/api/posts', {
+    method: 'POST',
     body: formData
   });
 
-  document.getElementById('content').value='';
-  document.getElementById('image').value='';
-  load();
-}
+  document.getElementById('content').value = '';
+  document.getElementById('image').value = '';
 
-function escapeHtml(text) {
-  if(!text) return '';
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  load();
 }
 
 load();
