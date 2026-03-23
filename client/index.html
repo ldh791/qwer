@@ -6,27 +6,86 @@
 <title>Board</title>
 
 <style>
-body { background:#eef2ff; font-family:Verdana; font-size:12px; margin:0; }
-.header { text-align:center; padding:10px; font-size:18px; }
-.container { max-width:800px; margin:auto; background:#fff; padding:10px; border:1px solid #ccd; }
+* {
+  box-sizing: border-box;
+}
 
-.form { background:#f0f4ff; padding:8px; margin-bottom:10px; }
-textarea { width:100%; height:60px; }
-button { margin-top:5px; }
+body {
+  background: #eef2ff;
+  font-family: Verdana;
+  font-size: 12px;
+  margin: 0;
+}
 
-.post { border-top:1px solid #ddd; padding:5px; }
-.reply { margin-left:20px; border-left:2px solid #ccc; padding-left:5px; }
+.header {
+  text-align: center;
+  padding: 10px;
+  font-size: 18px;
+}
 
-img { max-width:200px; display:block; margin-top:5px; cursor:pointer; }
+.container {
+  max-width: 800px;
+  margin: auto;
+  background: #fff;
+  border: 1px solid #ccd;
+  padding: 10px;
+}
 
 .board-menu {
-  text-align:center;
-  margin-bottom:10px;
+  text-align: center;
+  margin-bottom: 10px;
 }
+
 .board-menu a {
-  margin:0 5px;
-  cursor:pointer;
-  color:blue;
+  margin: 0 5px;
+  text-decoration: none;
+  color: blue;
+}
+
+/* 🔥 모바일 핵심 수정 */
+textarea {
+  width: 100%;
+  max-width: 100%;
+  height: 60px;
+}
+
+input[type="file"] {
+  width: 100%;
+}
+
+button {
+  margin-top: 5px;
+}
+
+.form {
+  background: #f0f4ff;
+  padding: 8px;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+.post {
+  border-top: 1px solid #ddd;
+  padding: 5px;
+}
+
+.reply {
+  margin-left: 15px;
+  border-left: 2px solid #ccc;
+  padding-left: 5px;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  margin-top: 5px;
+}
+
+@media (max-width: 600px) {
+  .container {
+    border: none;
+    padding: 8px;
+  }
 }
 </style>
 </head>
@@ -36,14 +95,14 @@ img { max-width:200px; display:block; margin-top:5px; cursor:pointer; }
 <div class="header">Anonymous Board</div>
 
 <div class="board-menu">
-  <a onclick="switchBoard('b')">/b</a>
-  <a onclick="switchBoard('g')">/g</a>
+  <a href="/b">/b</a>
+  <a href="/g">/g</a>
 </div>
 
 <div class="container">
 
 <div class="form">
-  <textarea id="content"></textarea>
+  <textarea id="content" placeholder="내용 입력"></textarea>
   <input type="file" id="image">
   <button onclick="post()">작성</button>
 </div>
@@ -53,12 +112,7 @@ img { max-width:200px; display:block; margin-top:5px; cursor:pointer; }
 </div>
 
 <script>
-let currentBoard = 'b';
-
-function switchBoard(b){
-  currentBoard = b;
-  load();
-}
+let currentBoard = window.location.pathname.replace('/', '') || 'b';
 
 async function load(){
   const res = await fetch('/api/posts/' + currentBoard);
@@ -67,12 +121,13 @@ async function load(){
   const list = document.getElementById('list');
   list.innerHTML = '';
 
-  data.forEach(p=>{
+  data.forEach(p => {
     const div = document.createElement('div');
     div.className = 'post';
 
     let repliesHTML = '';
-    p.replies.forEach(r=>{
+
+    p.replies.forEach(r => {
       repliesHTML += `
         <div class="reply">
           ${escape(r.content)}
