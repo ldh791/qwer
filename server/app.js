@@ -1,25 +1,45 @@
 const express = require('express');
 const path = require('path');
+const multer = require('multer');
+
 const app = express();
 
-app.use(express.json());
+// 🔥 업로드 설정
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/');
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+
+const upload = multer({ storage });
+
+// 🔥 static
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use(express.static(path.join(__dirname, '../client')));
 
 let posts = [];
 
-// API
-app.get('/api/posts', (req, res) => res.json(posts));
+// 🔥 핵심: multer 먼저!
+app.post('/api/posts', upload.single('image'), (req, res) => {
+  console.log("BODY:", req.body);
+  console.log("FILE:", req.file);
 
-app.post('/api/posts', (req, res) => {
   const post = {
     id: Date.now(),
-    content: req.body.content || ''
+    content: req.body.content ? req.body.content : '',
+    image: req.file ? '/uploads/' + req.file.filename : null
   };
+
   posts.unshift(post);
   res.json(post);
 });
 
-// 🔥 프론트 연결 핵심
-app.use(express.static(path.join(__dirname, '../client')));
+app.get('/api/posts', (req, res) => {
+  res.json(posts);
+});
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/index.html'));
