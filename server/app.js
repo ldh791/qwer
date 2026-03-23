@@ -4,32 +4,29 @@ const path = require('path');
 
 const app = express();
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../client')));
+
 app.use('/uploads', express.static('uploads'));
+app.use(express.static(path.join(__dirname, '../client')));
 
 const upload = multer({ dest: 'uploads/' });
 
 const PORT = process.env.PORT || 10000;
 const ADMIN_PASS = "1234";
 
-/* ===== 임시 DB ===== */
 let posts = [];
 
-/* ===== 글 목록 ===== */
+/* 게시판 목록 */
 app.get('/api/posts/:board', (req, res) => {
   const board = req.params.board;
-  const result = posts.filter(p => p.board === board);
-  res.json(result);
+  res.json(posts.filter(p => p.board === board));
 });
 
-/* ===== 글 작성 ===== */
+/* 글 작성 */
 app.post('/api/post/:board', upload.single('image'), (req, res) => {
-  const board = req.params.board;
-
   const post = {
     id: Date.now(),
-    board,
-    content: req.body.content,
+    board: req.params.board,
+    content: req.body.content || '',
     image: req.file ? '/uploads/' + req.file.filename : null,
     replies: []
   };
@@ -38,35 +35,30 @@ app.post('/api/post/:board', upload.single('image'), (req, res) => {
   res.json({ ok: true });
 });
 
-/* ===== 댓글 작성 ===== */
+/* 댓글 */
 app.post('/api/reply/:id', upload.single('image'), (req, res) => {
   const post = posts.find(p => p.id == req.params.id);
-  if (!post) return res.status(404).send('no');
+  if (!post) return res.send('no');
 
   post.replies.push({
     id: Date.now(),
-    content: req.body.content,
+    content: req.body.content || '',
     image: req.file ? '/uploads/' + req.file.filename : null
   });
 
   res.json({ ok: true });
 });
 
-/* ===== 글 삭제 ===== */
+/* 글 삭제 */
 app.delete('/api/post/:id', (req, res) => {
-  if (req.body.pass !== ADMIN_PASS) {
-    return res.status(403).send('wrong');
-  }
-
+  if (req.body.pass !== ADMIN_PASS) return res.send('no');
   posts = posts.filter(p => p.id != req.params.id);
   res.send('ok');
 });
 
-/* ===== 댓글 삭제 ===== */
+/* 댓글 삭제 */
 app.delete('/api/reply/:postId/:replyId', (req, res) => {
-  if (req.body.pass !== ADMIN_PASS) {
-    return res.status(403).send('wrong');
-  }
+  if (req.body.pass !== ADMIN_PASS) return res.send('no');
 
   const post = posts.find(p => p.id == req.params.postId);
   if (!post) return res.send('no');
@@ -75,9 +67,14 @@ app.delete('/api/reply/:postId/:replyId', (req, res) => {
   res.send('ok');
 });
 
-/* ===== 기본 페이지 ===== */
-app.get('/', (req, res) => {
+/* 🔥 핵심: /b /g 라우팅 */
+app.get('/:board', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/index.html'));
+});
+
+/* 기본 */
+app.get('/', (req, res) => {
+  res.redirect('/b');
 });
 
 app.listen(PORT, () => {
